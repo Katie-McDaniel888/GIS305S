@@ -26,5 +26,5 @@ with arcpy.da.SearchCursor(flayer, field) as cursor:
         print(i, str(row[0]))
         total = total + row[0]
         i = i + 1
-
+#This is my comment
 print(f"Total population is: {total:,}")
