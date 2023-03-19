@@ -25,7 +25,7 @@ def transform():
             resp_dict = r.json()
             x = resp_dict['result']['addressMatches'][0]['coordinates']['x']
             y = resp_dict['result']['addressMatches'][0]['coordinates']['y']
-            transformed_file.write("{x},{y},Residential\n")
+            transformed_file.write(f"{x},{y},Residential\n")
 
     transformed_file.close()
 
@@ -39,8 +39,9 @@ def load():
     y_coords = "Y"
 
     arcpy.management.XYTableToPoint(in_table, out_feature_class, x_coords, y_coords)
-#print statement
+
     print(arcpy.GetCount_management(out_feature_class))
+
 if __name__ == '__main__':
     extract()
     transform()
