@@ -39,7 +39,6 @@ def load():
     y_coords = "Y"
 
     arcpy.management.XYTableToPoint(in_table, out_feature_class, x_coords, y_coords)
-
     print(arcpy.GetCount_management(out_feature_class))
 
 if __name__ == '__main__':
