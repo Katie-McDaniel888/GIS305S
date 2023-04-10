@@ -40,8 +40,8 @@ class SpatialEtl:
         self.config_dict = config_dict
     def extract(self):
         print(f"Extracting data from {self.config_dict.get('remote_url')}" f"to {self.config_dict.get('proj_dir')}")
-    def transform(selfself):
-        print(f"Tranforming {self.config_dict.get('data_format')}")
+    def transform(self):
+        print(f"Transforming {self.config_dict.get('data_format')}")
     def load (self):
         print(f"Loading data into {self.config_dict.get('proj_dir')}")
 
@@ -94,7 +94,6 @@ def erase():
     arcpy.analysis.Erase(buff_avoid_points, eraseOutput)
 if __name__ == '__main__':
    config_dict = setup()
-   global config_dict
    print(config_dict)
    etl()
    main()
