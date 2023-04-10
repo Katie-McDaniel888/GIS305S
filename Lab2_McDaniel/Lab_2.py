@@ -4,6 +4,10 @@ import requests
 from SpatialEtl import SpatialEtl
 import yaml
 
+def myfunc():
+    print("config_dict")
+    global x
+    x = config_dict
 def setup():
     arcpy.env.workspace = f"{config_dict.get('proj_dir')}WestNileOutbreak.gdb"
     with open('config/wnvoutbreak.yaml') as f:config_dict = yaml.load(f, loader=yml.FullLoader)
@@ -12,6 +16,7 @@ def etl():
     print("Take the survey")
     etl_instance=GSheetsEtl("https://foo_bar.com", "C:/Users/my.gdb", "C:/Users", "GSheets")
     etl_instance.process()
+
 # Create default workspace
 class GSheetsEtl(SpatialEtl):
     config_dict = None
@@ -93,8 +98,9 @@ def erase():
     eraseOutput = f"{config_dict.get('proj_dir')}WestNileOutbreak.gdb\buff_avoid_points"
     arcpy.analysis.Erase(buff_avoid_points, eraseOutput)
 if __name__ == '__main__':
-   config_dict = setup()
-   print(config_dict)
-   etl()
-   main()
+    myfunc()
+    config_dict = setup()
+    print(config_dict)
+    etl()
+    main()
 
