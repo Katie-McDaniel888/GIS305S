@@ -13,31 +13,6 @@ def etl():
     etl_instance=GSheetsEtl("https://foo_bar.com", "C:/Users/my.gdb", "C:/Users", "GSheets")
     etl_instance.process()
 # Create default workspace
-class SpatialEtl:
-    def __init__(self,config_dict):
-        self.config_dict = config_dict
-    def extract(self):
-        print(f"Extracting addresses from {self.config_dict.get('remote_url')}" f"to {self.config_dict.get('proj_dir')}")
-        #file = urllib.request.urlopen("https://docs.google.com/forms/d/e/1FAIpQLSe1QzJGuFFAb0xQi2VxWE9bmc85Oxv4a3SNnuAvgVgaZgVySg/viewform?usp=sf_link)
-        r = requests.get("https://docs.google.com/spreadsheets/d/e/2PACX-1vTaJ_1xRhGQAOSITkgn_C1wfPSnPX0BA37XuftlXVfVrpjfj4J3BHPu1soGeUtNt3XjLI1G_HT2Fy69/pub?output=csv")
-        r.encoding = "utf-8"
-        data = r.text
-        with open(r"C:\Users\ka003737\Downloads\Spring_2023\GIS3005\addresses.csv", "w") as output_file:
-         output_file.write(data)
-    def load(self):
-        #set environment
-        arcpy.env.workspace = f"{config_dict.get('proj_dir')}WestNileOutbreak.gdb"
-        arcpy.env.orderwriteOutput = True
-        in_table = r"C:\Users\ka003737\Downloads\Spring_2023\GIS3005\new_addresses.csv"
-        out_feature_class = "avoid_points"
-        x_coords = "X"
-        y_coords = "Y"
-        arcpy.management.XYTableToPoint(in_table, out_feature_class, x_coords, y_coords)
-        prnt(arcpy.GetCount_management(out_feature_class))
-    def process(self):
-        self.extract()
-        self.transform()
-        self.load()
 class GSheetsEtl(SpatialEtl):
     config_dict = None
     def __init__(self,config_dict):
@@ -45,7 +20,7 @@ class GSheetsEtl(SpatialEtl):
     def extract(self):
         print(f"Extracting addresses from {self.config_dict.get('remote_url')}" f"to {self.config_dict.get('proj_dir')}")
         #file = urllib.request.urlopen("https://docs.google.com/forms/d/e/1FAIpQLSe1QzJGuFFAb0xQi2VxWE9bmc85Oxv4a3SNnuAvgVgaZgVySg/viewform?usp=sf_link)
-        r = requests.get(self.config_dict.get('remote_url')
+        r = requests.get(self.config_dict.get('remote_url'))
     def load(self):
         #set environment
         arcpy.env.workspace = f"{config_dict.get('proj_dir')}WestNileOutbreak.gdb"
@@ -60,7 +35,15 @@ class GSheetsEtl(SpatialEtl):
         self.extract()
         self.transform()
         self.load()
-
+class SpatialEtl:
+    def __init__(self,config_dict):
+        self.config_dict = config_dict
+    def extract(self):
+        print(f"Extracting data from {self.config_dict.get('remote_url')}" f"to {self.config_dict.get('proj_dir')}")
+    def transform(selfself):
+        print(f"Tranforming {self.config_dict.get('data_format')}")
+    def load (self):
+        print(f"Loading data into {self.config_dict.get('proj_dir')}")
 
 # Add layers
 input_path = f"{config_dict.get('proj_dir')}WestNileOutbreak.gdb{layer_name}"
@@ -110,8 +93,8 @@ def erase():
     eraseOutput = f"{config_dict.get('proj_dir')}WestNileOutbreak.gdb\buff_avoid_points"
     arcpy.analysis.Erase(buff_avoid_points, eraseOutput)
 if __name__ == '__main__':
-   global config_dict
    config_dict = setup()
+   global config_dict
    print(config_dict)
    etl()
    main()
