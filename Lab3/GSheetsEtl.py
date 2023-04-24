@@ -8,7 +8,7 @@ class GSheetsEtl(SpatialEtl):
     config_dict = None
     def __init__(self,config_dict):
         self.config_dict = config_dict
-
+#push
     def extract(self):
         logging.info("Extracting addresses from spreadsheet")
 
