@@ -1,7 +1,6 @@
 import arcpy
 import requests
 import csv
-import json
 
 def extract(self):
     print(f"Extracting addresses from {self.remote} to {self.local_dir}")
