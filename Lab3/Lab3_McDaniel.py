@@ -63,8 +63,8 @@ def exportMap(aprx):
 
     lyt = aprx.listLayouts()[0]
     for el in lyt.listElements():
-        if 'Title' in el.name:
-            el.text = el.text + subtitle
+    if 'Title' in el.name:
+        el.text = el.text + subtitle
 
     export_name = input("Enter exported layout name:")
     lyt.exportToPDF(rf"{config_dict.get('proj_dir')}\{export_name}.pdf")
