@@ -2,14 +2,34 @@ import arcpy
 import csv
 import requests
 import logging
-from SpatialEtl import SpatialEtl
 
+import GSheetsEtl
+from SpatialEtl import SpatialEtl
+my_etl = GSheetsEtl({})
+print(my_etl.__doc__)
+help(my_etl)
+
+GSheetsEtl performs an extract, transform, and load process using a URL to a Google Spreadsheet. The Spreadsheet must contain an address and zipcode column.
+Help on GSheetsEtl in module etl.GSheetsEtl object:
+class GSheetsEtl(etl.SpatialEtl.SpatialEtl)
+        GSheetsEtl(config_dict)
+        GSheetsEtl performs an extract, transform, and load process using a URL to a Google Spreadsheet
 class GSheetsEtl(SpatialEtl):
+    """
+    GSheetsEtl performs an extract, transform and load process uing a URL to a google spreadsheet. The spreadsheet must contain an address and zipcode column
+    Parameters:
+    config_dict (dictionary): A dictionary containing a remote_URL key to the google spreadsheet and web geocoding service
+    """
+
+    # A dictionary of configuration keys and values
     config_dict = None
     def __init__(self,config_dict):
         self.config_dict = config_dict
 #push
     def extract(self):
+        """
+        Extracting data from a Google spreadsheet and save it as a local file
+        """
         logging.info("Extracting addresses from spreadsheet")
 
         r = requests.get(self.config_dict.get("remote_url"))
@@ -19,6 +39,9 @@ class GSheetsEtl(SpatialEtl):
             output_file.write(data)
 
     def transform(self):
+        """
+        Transforming the data from addresses to a geocoded address for map placement
+        """
         transformed_file = open(f"{self.config_dict.get('proj_dir')}new_addresses.csv", "w")
         transformed_file.write("X,Y,Type\n")
         with open(rf"{self.config_dict.get('proj_dir')}\addresses.csv", "r") as partial_file:
@@ -38,7 +61,9 @@ class GSheetsEtl(SpatialEtl):
         transformed_file.close()
 
     def load(self):
-        #set environment
+        """
+        Load the new geocoded data into the map as a point
+        """
         arcpy.env.workspace = rf"{self.config_dict.get('proj_dir')}\WestNileOutbreak.gdb"
         arcpy.env.overwriteOutput = True
         in_table = f"{self.config_dict.get('proj_dir')}new_addresses.csv"
