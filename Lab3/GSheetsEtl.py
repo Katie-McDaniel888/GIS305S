@@ -17,7 +17,7 @@ class GSheetsEtl(SpatialEtl):
     SpatialEtl: calls the
     returns: avoid points layer (XYTable)
     """
-
+#
     config_dict = None
     def __init__(self, config_dict):
         super().__init__(config_dict)

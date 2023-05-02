@@ -1,7 +1,7 @@
 import arcpy
 import requests
 import csv
-
+#
 def extract(self):
     print(f"Extracting addresses from {self.remote} to {self.local_dir}")
     #file = urllib.request.urlopen("https://docs.google.com/spreadsheets/d/e/2PACX-1vTaJ_1xRhGQAOSITkgn_C1wfPSnPX0BA37XuftlXVfVrpjfj4J3BHPu1soGeUtNt3XjLI1G_HT2Fy69/pub?output=csv")

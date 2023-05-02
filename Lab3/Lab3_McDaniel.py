@@ -34,7 +34,7 @@ def buffer(buf_lyr):
     print("Buffer created " + output_layer)
     return
 
-
+#
 # Define Intersect
 def intersect(int_lyrs):
     log.info('Intersecting')
