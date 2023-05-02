@@ -1,8 +1,9 @@
 import arcpy
 import yaml
 import logging
-
+import csv
 from GSheetsEtl import GSheetsEtl
+
 
 log = logging.getLogger(__name__)
 def setup():
@@ -10,119 +11,206 @@ def setup():
         config_dict = yaml.load(f, Loader=yaml.FullLoader)
     return config_dict
 
-global config_dict
-config_dict = setup()
-log.info(config_dict)
-
-arcpy.env.workspace = rf"{config_dict.get('proj_dir')}\WestNileOutbreak.gdb\\"
-arcpy.env.overwriteOutput = True
-
-logging.basicConfig(filename=f"{config_dict.get('proj_dir')}wnv.log",
-                    filemode="w", level=logging.DEBUG)
-logging.info('Starting West Nile Virus Simulation')
-# define layers
-address = rf"{config_dict.get('proj_dir')}\WestNileOutbreak.gdb\Addresses"
-lakes = rf"{config_dict.get('proj_dir')}\WestNileOutbreak.gdb\Lakes_Reservoirs"
-mosquito = rf"{config_dict.get('proj_dir')}\WestNileOutbreak.gdb\Mosquito_Larva"
-osmp = rf"{config_dict.get('proj_dir')}\WestNileOutbreak.gdb\OSMP_Properties"
-wetlands = rf"{config_dict.get('proj_dir')}\WestNileOutbreak.gdb\Wetlands"
-avoid = rf"{config_dict.get('proj_dir')}\WestNileOutbreak.gdb\Avoid_Points"
-
 
 def etl():
-    log.info('ETLing')
+    """etl can be imported as base class definitions for use in extraction, transformation and loading data.
+      these classes define objects written too and returned from created csv to then apply spatial information for
+      further output processing."""
+    logging.debug("Etl process has begun, if error occurs go to GSheetsEtl.")
+    print("Start etl process....")
     etl_instance = GSheetsEtl(config_dict)
     etl_instance.process()
-    log.debug('ETL complete')
 
 # Define Buffer
 def buffer(buf_lyr):
-    log.info('Buffering')
-    buf_out_name = input("What is the name of the buffer output for the " + buf_lyr + " layer?")
-    buf_dist_input = input("What is the buffer distance in feet?")
-    buf_dist = buf_dist_input + " feet"
+    units = " feet"
+    distance = str(dist) + units
 
-    # buffer analysis
-    result = arcpy.Buffer_analysis(buf_lyr, buf_out_name, buf_dist,"FULL","ROUND","ALL")
-    log.debug('Buffer complete')
-    return buf_out_name;
+    # Output location path for the buffered layer
+    output_layer = f"{layer}_buff"
+
+    # Buffer analysis tool (input variable name, output variable name, distance type string,"FULL", "ROUND", "ALL")
+    arcpy.Buffer_analysis(layer, output_layer, distance, "FULL", "ROUND", "ALL")
+    print("Buffer created " + output_layer)
+    return
 
 
 # Define Intersect
 def intersect(int_lyrs):
     log.info('Intersecting')
     # ask user to name output layer
-    lyr_name = input("What is the desired name of the output intersect layer?")
-    arcpy.Intersect_analysis(int_lyrs, lyr_name)
-    log.debug('Intersect complete')
-    return lyr_name
+    print(inter_list)
+
+    # ask the user to define an output intersect layer and store the results in a variable
+    output_layer = f"{config_dict.get('proj_dir')}\WestNileOutbreak.gdb\_intersect"
+
+    # run a intersect analysis between the two buffer layer name and store the result in a variable
+    # using arcpy.Intersect_analysis
+    arcpy.Intersect_analysis(inter_list, output_layer)
+    print("Intersect is complete")
+    return output_layer
+def erase (erase_points):
+    logging.info("Erasing avoid_points to obtain final output")
+    print("Erasing layer output created")
+    in_features = f"{config_dict.get('proj_dir')}WestNileOutbreak.gdb\_intersect"
+    avoid_points = erase_points
+    out_feature_name = f"{config_dict.get('proj_dir')}WestNileOutbreak.gdb\SpatialJoin_ErasedPoints"
+    arcpy.Erase_analysis(in_features, avoid_points, out_feature_name)
+    print("Avoid points is erased. Final analysis layer is ready")
+    return out_feature_name
+
+def spatial(erase_layer):
+    """
+    spatial function: creates a spatial join layer with addresses and final analysis layer
+    parameters: erase_layer (this is the final analysis layer)
+    returns: spj_file (a spatial joined addresses will the final analysis layer)
+    """
+    logging.info("Spatial joining all the addresses and the final analysis layer.")
+    print("Addresses and Final_Analysis layer are being joined")
+
+    target_feature = f"{config_dict.get('proj_dir')}\Addresses"
+    join_feature = erase_layer
+    spj_file = f"{config_dict.get('proj_dir')}WestNileOutbreak.gdb\spatial_join"
+    arcpy.SpatialJoin_analysis(target_feature, join_feature, spj_file)
+    print("Spatial Join has been completed")
+    return spj_file
+
+
+def spatialreference(map_final):
+    """
+    spatialreference function: will set the map document to a spatial reference of 102653
+    (NAD 1983 StatePlane Colorado North FIPS 0501Feet-Northern Colorado State Plane).
+    parameters: map_final
+    returns: map_final.spatialReference (a spatial referenced map)
+    """
+    logging.info("Spatial Reference for map document will be set to Northern Colorado State Plane")
+    noco = 102653
+    state_plane_noco = arcpy.SpatialReference(noco)
+    map_final.spatialReference = state_plane_noco
+    print("Spatial Reference set to 102653- North Colorado State Plane (feet).")
+    return map_final.spatialReference
 
 def exportMap(aprx):
-    log.debug('Starting to export map')
-    subtitle = input("Enter map subtitle:")
+    """
+    exportMap function: Sets the spatial reference for the final map document, prints a list
+    of the map layouts, prints a list the elements found on the map document and takes the
+    Final_Analysis layer-applies a simple renderer (symbology red with transparency of 50% red.
+    It then exports a pdf of the final map.
+    parameters: aprx (current project)
+    returns: a pdf map in the project directory of the yaml file.
+    """
+    logging.info("Exporting final map has begun.")
+    map_final = aprx.listMaps()[0]
 
-    lyt = aprx.listLayouts()[0]
-    for el in lyt.listElements():
-    if 'Title' in el.name:
-        el.text = el.text + subtitle
+    # Setting spatial reference
+    spatialreference(map_final)
 
-    export_name = input("Enter exported layout name:")
-    lyt.exportToPDF(rf"{config_dict.get('proj_dir')}\{export_name}.pdf")
-    log.debug('Export complete')
+
+    # List Map Layout in WNVOutbreak Project
+    lyt_list = aprx.listLayouts()[0]
+    print(lyt_list.name)
+
+    # List elements within the map layout such as the title, the legend and etc..
+    for el in lyt_list.listElements():
+        print(el.name)
+        if "Title" in el.name:
+            el.text = el.text
+        if "Date" in el.name:
+            el.text = el.text
+
+    # Layers: TargetAddresses
+    lyr = map_final.listLayers("Final_Analysis")[0]
+
+    # Get the existing symbol and sets the Final_Analysis layer to red.
+    sym = lyr.symbology
+    sym.renderer.symbol.color = {'RGB': [255, 0, 0, 100]}
+    sym.renderer.symbol.outlineColor = {'RGB': [0, 0, 0, 100]}
+    lyr.symbology = sym
+    lyr.transparency = 10
+
+    # Save all the aprx to the
+    aprx.save()
+
+    # Export final map to a pdf using the user input name.
+    lyt_list.exportToPDF(f"{config_dict.get('proj_dir')}\\final_map")
     return
 # Define Main
 def main():
     log.info('Starting West Nile Virus Simulation')
-
+    arcpy.env.workspace = f"{config_dict.get('proj_dir')}\WestNileOutbreak.gdb"
+    arcpy.env.overwriteOutput = True
     # Define variables
-    int_lyrs = []
-    buf_lyrs = [lakes, mosquito, wetlands, osmp]
-
+    LayerList = ["Mosquito_Larval_Sites", "Wetlands_Regulatory", "OSMP_Properties",
+                 "Lakes_and_Reservoirs_Boulder_County", "avoid_points"]
     # Call buffer
-    for lyr in buf_lyrs:
-        out_buf_name=buffer(lyr)
-        int_lyrs.append(out_buf_name)
-
+    for layer in LayerList:
+        dist = 1500
+        bufferlayer = buffer(layer, dist)
 
     # Call Intersect
-    output_lyr_name = intersect(int_lyrs)
+    logging.debug("Intersect...")
+    inter_list = ['buffer_mosquitos', 'buffer_wetlands', 'buffer_osmp',
+                  'buffer_lakes_reservoirs']
+    try:
+        output_intersectlayer = intersect(inter_list)
+        print(f"{output_intersectlayer}")
+    except:
+        print("Something went wrong with the intersect all buffered layers function.")
+    #Intersect buffered layers with the avoid_points layer
+    logging.debug("Intersect all buffered layers and the avoid points layer for final analysis layer.")
+    inter_list2 = ["_intersect", "avoid_points_buff"]
+    outputlayer_avpt = f"{config_dict.get('proj_dir')}WestNileOutbreak.gdb\intersect_avpt"
+    try:
+        arcpy.Intersect_analysis(inter_list2, outputlayer_avpt)
+        print("Intersect avoid points layer complete.")
+    except:
+        print("Something went wrong with the intersect between all buffered layers and avoid points layers.")
+        # Erase avoid_points_buffer layer from the intersect layer, display final areas to be sprayed
+    logging.debug("Erase new address points from spatial join layer.")
+    erase_points = "intersect_avpt"
+    try:
+        erase_layer = erase(erase_points)
+        print(f"Erases new address file from spatial join: {erase_layer}")
+    except:
+        print("Something went wrong with erasing avoid_points from the intersect.")
 
-    # Spatial Join of exposed addresses
-    log.info('Spatial Join')
-    arcpy.analysis.SpatialJoin(address, output_lyr_name, "WNV_Spatial")
-    WNV_Spatial = f"{config_dict.get('proj_dir')}\WestNileOutbreak.gdb\WNV_Spatial"
-    arcpy.Select_analysis(WNV_Spatial, 'exposed_addresses', "Join_Count > 0")
-    count_lyr = (f"{config_dict.get('proj_dir')}\WestNileOutbreak.gdb\exposed_addresses")
-    result = arcpy.GetCount_management(count_lyr)
-    log.info("There are " + result[0] + " homes in the danger area.")
-    log.debug('Spatial Join complete')
+    # Spatial Join of all the buffered layers.
+    logging.debug("Spatial Join all the buffered layers.")
+    try:
+        finaloutput_spjlayer = spatial(erase_layer)
+        print(f"New Spatial Join Layer named: {finaloutput_spjlayer}")
+    except:
+        print("Something went wrong with the spatial join for all  buffered layers and addresses")
 
+    # Clip Addresses to final analysis layer.
+    try:
+        logging.debug("Clip addresses to final analysis layer to get target addresses to contact for spraying")
+        TargetAddresses = arcpy.Clip_analysis("Addresses", erase_layer, "Target_Addresses")
+        print(f"Final target address layer has been completed:{TargetAddresses}")
 
-    # Symmetrical Difference displays the areas of no overlap between the intersect layer and the avoid point buffer.
-    # Erase removes the avoid point buffer from the intersect layer creating a new risk area.
+        # Number of addresses to be contacted.
+        logging.debug("GetCount for target address file.")
+        address_count = arcpy.management.GetCount(TargetAddresses)
+        print(f"Number of addresses to be contacted for mosquito spraying:{address_count}")
 
-    log.info('Symmetrical difference')
-    update_layer =arcpy.Buffer_analysis(avoid, "avoid_buf", "1500 feet", "FULL", "ROUND", "ALL")
-    symdif = arcpy.SymDiff_analysis(output_lyr_name,update_layer, "Areas_to_Spray", "ALL", None)
-    log.debug('Symmetrical difference complete')
-    log.info('Erase')
-    spray_areas = arcpy.Erase_analysis(symdif,update_layer,"new_danger_area")
-    new_at_risk = arcpy.SelectLayerByLocation_management(address,'INTERSECT',spray_areas)
-    result2= arcpy.GetCount_management(new_at_risk)
-    arcpy.management.CopyFeatures(new_at_risk,'At_Risk_Addresses')
-    log.info("There are now " + result2[0] + " homes in the danger area after removing no spray zones.")
-    log.debug('Erase complete')
+        # Convert Target Addresses feature class to a shapefile
+        logging.debug("Convert feature layer to a shapefile.")
+        TargetAddresses_shape = arcpy.conversion.FeatureClassToShapefile(TargetAddresses,
+                                                            f"{config_dict.get('proj_dir')}\\TargetAddresses_shape")
+        print(f"Target Address layer has been converted to a shapefile: {TargetAddresses_shape}")
+    except:
+        print("Something went wrong with the clipping addresses to final analysis layer.")
+    # upload project to ArcGIS Pro
+    logging.info("Creating the layout and saving final map to a pdf.")
+    aprx = arcpy.mp.ArcGISProject(f"{config_dict.get('proj_dir')}WestNileOutbreak.aprx")
+    map = exportMap(aprx)
 
-    log.info('adding results to map')
-    aprx = arcpy.mp.ArcGISProject(f"{config_dict.get('proj_dir')}\WestNileOutbreak.aprx")
-    map_doc = aprx.listMaps()[0]
-    map_doc.addDataFromPath(rf"{config_dict.get('proj_dir')}\WestNileOutbreak.gdb\At_Risk_Addresses")
-    aprx.save()
-    log.debug('Adding results complete')
-    exportMap(aprx)
-    log.debug('WNV Simulation complete')
-# Press the green button in the gutter to run the script.
+    print("Final Map Complete")
+
 if __name__ == '__main__':
-    setup()
+    global config_dict
+    config_dict = setup()
+    print(config_dict)
     etl()
-    #end
+    main()
+

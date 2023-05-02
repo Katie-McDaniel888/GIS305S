@@ -23,7 +23,8 @@ def transform(self):
         for row in csv_dict:
             address = row["Street Address"] + " Boulder CO"
             print(address)
-            geocode_url = "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=" + address + "&benchmark=2020&format=json"
+            geocode_url = "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=" + address \
+                          + "&benchmark=2020&format=json"
             print(geocode_url)
             r = requests.get(geocode_url)
 
@@ -54,7 +55,7 @@ def load(self):
 
     # Print the total rows
     print(f"Loading data into {self.destination}" "arcpy.GetCount_management(out_feature_class)")
-
+#push
 
 if __name__ == "__main__":
     extract()
