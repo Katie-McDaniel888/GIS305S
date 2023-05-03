@@ -150,7 +150,7 @@ def main():
     # Call Intersect
     logging.debug("Intersect...")
     inter_list = ["buff_mosquitos", "buff_wetlands", "buff_osmp",
-                  "buff_lakes_reservoirs"]
+                  "buff_lakes_reservoirs", "avoid_points_buff"]
     try:
         output_intersectlayer = intersect(inter_list)
         print(f"{output_intersectlayer}")
@@ -158,7 +158,7 @@ def main():
         print("Something went wrong with the intersect all buffered layers function.")
     #Intersect buffered layers with the avoid_points layer
     logging.debug("Intersect all buffered layers and the avoid points layer for final analysis layer.")
-    inter_list2 = ["_intersect", "avoid_points_buff"]
+    inter_list2 = ["Intersected Areas", "avoid_points_buff"]
     outputlayer_avpt = f"{config_dict.get('proj_dir')}WestNileOutbreak.gdb\intersect_avpt"
     try:
         arcpy.Intersect_analysis(inter_list2, outputlayer_avpt)
