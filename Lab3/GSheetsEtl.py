@@ -46,27 +46,35 @@ class GSheetsEtl(SpatialEtl):
         returns: csv with x and y coordinates to be used as the avoid points layer in finalproject.py main function
         """
         print("Add City, State")
+
         geocoder_prefix_url = self.config_dict.get('geocoder_prefix_url')
         geocoder_suffix_url = self.config_dict.get('geocoder_suffix_url')
         transformed_file = open(f"{self.config_dict.get('proj_dir')}new_addresses.csv", "w")
         transformed_file.write("X,Y,Type\n")
+
         with open(f"{self.config_dict.get('proj_dir')}addresses.csv", "r") as partial_file:
             csv_dict = csv.DictReader(partial_file, delimiter=',')
             for row in csv_dict:
-                address = row["Street Address"] + " Boulder CO"
-                print(address)
-                geocode_url = f"{geocoder_prefix_url}{address}{geocoder_suffix_url}"
-                print(geocode_url)
-                r = requests.get(geocode_url)
+                try:
+                # geocode address
+                # parse json result
+                    address = row["Street Address"] + " Boulder CO"
+                    print(address)
+                    geocode_url = f"{geocoder_prefix_url}{address}{geocoder_suffix_url}"
+                    print(geocode_url)
+                    r = requests.get(geocode_url)
 
-                resp_dist = r.json()
-                x = resp_dist['result']['addressMatches'][0]['coordinates']['x']
-                y = resp_dist['result']['addressMatches'][0]['coordinates']['y']
-                transformed_file.write(f"{x},{y}, Residential\n")
-
+                    resp_dist = r.json()
+                    x = resp_dist['result']['addressMatches'][0]['coordinates']['x']
+                    y = resp_dist['result']['addressMatches'][0]['coordinates']['y']
+                    transformed_file.write(f"{x},{y}, Residential\n")
+                except:
+                    print("Address not located!")
+                    # Continue on to the next address
+                    pass
         transformed_file.close()
 
-    # load function
+# load function
     def load(self):
         """
          Creates a point feature class from  the input table by creating a XY event layer and is then
@@ -79,23 +87,15 @@ class GSheetsEtl(SpatialEtl):
         arcpy.env.workspace = f"{self.config_dict.get('proj_dir')}"
         arcpy.env.overwriteOutput = True
 
-        in_table = r"C:\Users\ka003737\Downloads\Spring_2023\GIS3005\Lab1\Katie_McDaniel_Lab1\addresses.csv"
-        out_feature_class = f"{self.config_dict.get('proj_dir')}WestNileOutbreak.gdb\\avoid_points"
+        in_table = r"C:\Users\ka003737\Downloads\Spring_2023\GIS3005\Lab1\Katie_McDaniel_Lab1\new_addresses.csv"
+        out_feature_class = f"{self.config_dict.get('proj_dir')}WestNileOutbreak.gdb\avoid_points"
         print(f"{out_feature_class}")
         print("Avoid points file has been created.")
         x_coords = "X"
         y_coords = "Y"
-
         # Make the XY event layer using arcpy's XYTabletoPoint function.
         arcpy.management.XYTableToPoint(in_table, out_feature_class, x_coords, y_coords)
-
-        #     Print the total rows
-        print(arcpy.GetCount_management(out_feature_class))
-
     def process(self):
-        """
-        Start the processes of extract, transform and load.
-        """
         self.extract()
         self.transform()
         self.load()

@@ -1,7 +1,6 @@
 import arcpy
 import yaml
 import logging
-import csv
 from GSheetsEtl import GSheetsEtl
 
 
@@ -14,15 +13,16 @@ def setup():
 
 def etl():
     """etl can be imported as base class definitions for use in extraction, transformation and loading data.
-      these classes define objects written too and returned from created csv to then apply spatial information for
+      these classes are created as a csv and is transformed into spatial information for
       further output processing."""
-    logging.debug("Etl process has begun, if error occurs go to GSheetsEtl.")
+    logging.debug("Etl process has begun")
     print("Start etl process....")
     etl_instance = GSheetsEtl(config_dict)
     etl_instance.process()
 
 # Define Buffer
 def buffer(buf_lyr):
+    layer = aprx.listLayouts()[0]
     units = " feet"
     distance = str(dist) + units
 
@@ -144,8 +144,8 @@ def main():
                  "Lakes_and_Reservoirs_Boulder_County", "avoid_points"]
     # Call buffer
     for layer in LayerList:
-        dist = 1500
-        bufferlayer = buffer(layer, dist)
+        dist = [1500]
+        buf_lyr = buffer()
 
     # Call Intersect
     logging.debug("Intersect...")
@@ -206,11 +206,12 @@ def main():
     map = exportMap(aprx)
 
     print("Final Map Complete")
-
+    arcpy.env.overwriteOutput = True
 if __name__ == '__main__':
     global config_dict
     config_dict = setup()
     print(config_dict)
+    buffer()
     etl()
     main()
 
