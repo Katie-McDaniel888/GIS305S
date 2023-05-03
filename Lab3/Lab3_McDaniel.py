@@ -40,13 +40,13 @@ def intersect(int_lyrs):
     log.info('Intersecting')
     # ask user to name output layer
     print(inter_list)
-
+    arcpy.Intersect_analysis(inter_list, output_layer)
     # ask the user to define an output intersect layer and store the results in a variable
     output_layer = f"{config_dict.get('proj_dir')}\WestNileOutbreak.gdb\_intersect"
 
     # run a intersect analysis between the two buffer layer name and store the result in a variable
     # using arcpy.Intersect_analysis
-    arcpy.Intersect_analysis(inter_list, output_layer)
+
     print("Intersect is complete")
     return output_layer
 def erase (erase_points):
@@ -140,17 +140,17 @@ def main():
     arcpy.env.workspace = f"{config_dict.get('proj_dir')}\WestNileOutbreak.gdb"
     arcpy.env.overwriteOutput = True
     # Define variables
-    LayerList = ["Mosquito_Larval_Sites", "Wetlands_Regulatory", "OSMP_Properties",
-                 "Lakes_and_Reservoirs_Boulder_County", "avoid_points"]
+    LayerList = ["Mosquito_Larval_Sites", "Wetlands", "OSMP_Properties",
+                 "Lakes_and_Reservoirs___Boulder_County", "avoid_points"]
     # Call buffer
     for layer in LayerList:
-        dist = [1500]
-        buf_lyr = buffer()
+        dist = 1500
+        buffer = (layer,dist)
 
     # Call Intersect
     logging.debug("Intersect...")
-    inter_list = ['buffer_mosquitos', 'buffer_wetlands', 'buffer_osmp',
-                  'buffer_lakes_reservoirs']
+    inter_list = ["buff_mosquitos", "buff_wetlands", "buff_osmp",
+                  "buff_lakes_reservoirs"]
     try:
         output_intersectlayer = intersect(inter_list)
         print(f"{output_intersectlayer}")
@@ -201,9 +201,10 @@ def main():
     except:
         print("Something went wrong with the clipping addresses to final analysis layer.")
     # upload project to ArcGIS Pro
-    logging.info("Creating the layout and saving final map to a pdf.")
-    aprx = arcpy.mp.ArcGISProject(f"{config_dict.get('proj_dir')}WestNileOutbreak.aprx")
-    map = exportMap(aprx)
+    #logging.info("Creating the layout and saving final map to a pdf.")
+    #aprx = arcpy.mp.ArcGISProject(f"{config_dict.get('proj_dir')}Katie_McDaniel_Lab1.aprx")
+    #map = aprx.listMaps()[0]
+    #map = exportMap(aprx)
 
     print("Final Map Complete")
     arcpy.env.overwriteOutput = True
@@ -211,7 +212,6 @@ if __name__ == '__main__':
     global config_dict
     config_dict = setup()
     print(config_dict)
-    buffer()
     etl()
     main()
 

@@ -88,7 +88,7 @@ class GSheetsEtl(SpatialEtl):
         arcpy.env.overwriteOutput = True
 
         in_table = r"C:\Users\ka003737\Downloads\Spring_2023\GIS3005\Lab1\Katie_McDaniel_Lab1\new_addresses.csv"
-        out_feature_class = f"{self.config_dict.get('proj_dir')}WestNileOutbreak.gdb\avoid_points"
+        out_feature_class = f"{self.config_dict.get('proj_dir')}Katie_McDaniel_Lab1.gdb\\avoid_points"
         print(f"{out_feature_class}")
         print("Avoid points file has been created.")
         x_coords = "X"
