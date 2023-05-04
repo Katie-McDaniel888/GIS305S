@@ -1,3 +1,6 @@
+#Katie McDaniel
+#Final - GIS 305
+#Spring 2023
 import arcpy
 import requests
 import csv

@@ -25,16 +25,16 @@ def extract(self):
     r = requests.get("https://docs.google.com/spreadsheets/d/e/2PACX-1vTaJ_1xRhGQAOSITkgn_C1wfPSnPX0BA37XuftlXVfVrpjfj4J3BHPu1soGeUtNt3XjLI1G_HT2Fy69/pub?output=csv")
     r.encoding = "utf-8"
     data = r.text
-    with open(r"C:\Users\David Neufeld\Downloads\addresses.csv", "w") as output_file:
+    with open(r"C:\Users\ka003737\Downloads\Spring_2023\GIS3005\Lab1\Katie_McDaniel_Lab1\addresses.csv", "w") as output_file:
         output_file.write(data)
 
 
 def transform(self):
     print(f"Tranorming {self.data_format} Add City, State")
 
-    transformed_file = open(r"C:\Users\David Neufeld\Downloads\new_addresses.csv", "w")
+    transformed_file = open(r"C:\Users\ka003737\Downloads\Spring_2023\GIS3005\Lab1\Katie_McDaniel_Lab1\new_addresses.csv", "w")
     transformed_file.write("X,Y,Type\n")
-    with open(r"C:\Users\David Neufeld\Downloads\addresses.csv", "r") as partial_file:
+    with open(r"C:\Users\ka003737\Downloads\Spring_2023\GIS3005\Lab1\Katie_McDaniel_Lab1\addresses.csv", "r") as partial_file:
         csv_dict = csv.DictReader(partial_file, delimiter=',')
         for row in csv_dict:
             address = row["Street Address"] + " Boulder CO"
@@ -55,11 +55,11 @@ def load(self):
     # Description: Creates a point feature class from input table
 
     # Set environment settings
-    arcpy.env.workspace = r"C:\Users\David Neufeld\Documents\ArcGIS\GIS305\Projects\ModelBuilder\ModelBuilder.gdb\\"
+    arcpy.env.workspace = r"C:\Users\ka003737\Downloads\Spring_2023\GIS3005\Lab1\Katie_McDaniel_Lab1\Katie_McDaniel_Lab1.gdb\\"
     arcpy.env.overwriteOutput = True
 
     # Set the local variables
-    in_table = r"C:\Users\David Neufeld\Downloads\new_addresses.csv"
+    in_table = r"C:\Users\ka003737\Downloads\Spring_2023\GIS3005\Lab1\Katie_McDaniel_Lab1\new_addresses.csv"
     out_feature_class = "avoid_points"
     x_coords = "X"
     y_coords = "Y"
